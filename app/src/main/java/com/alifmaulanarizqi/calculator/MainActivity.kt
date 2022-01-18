@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import java.lang.ArithmeticException
-import java.text.DecimalFormat
 
 class MainActivity : AppCompatActivity() {
     private lateinit var tvDisplay: TextView
@@ -13,6 +12,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnDot: Button
     private var lastIsNumeric: Boolean = false
     private var lastIsDot: Boolean = false
+    private var oneDot: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,20 +26,28 @@ class MainActivity : AppCompatActivity() {
             tvDisplay.text = ""
             lastIsNumeric = false
             lastIsDot = false
+            oneDot = false
         }
 
         btnDot.setOnClickListener {
-            if(lastIsNumeric && !lastIsDot) {
+            if(!oneDot && lastIsNumeric && !lastIsDot) {
                 tvDisplay.append(".")
                 lastIsNumeric = false
                 lastIsDot = true
+                oneDot = true
             }
         }
 
     }
 
     fun onDigit(view: android.view.View) {
-        tvDisplay.append((view as Button).text)
+        if(tvDisplay.text.toString().startsWith("=")) {
+            tvDisplay.text = ""
+            tvDisplay.append((view as Button).text)
+        }
+        else
+            tvDisplay.append((view as Button).text)
+
         lastIsNumeric = true
         lastIsDot = false
     }
@@ -47,17 +55,18 @@ class MainActivity : AppCompatActivity() {
     fun onOperator(view: android.view.View) {
         val btnOperator = view as Button
 
-        // if(lastIsNumeric && !isOperatorAdded(tvDisplay.text.toString()))
+        if(tvDisplay.text.toString().startsWith("=")) {
+            tvDisplay.text = tvDisplay.text.toString().substring(1)
+        }
+
         if(lastIsNumeric) {
             tvDisplay.append(btnOperator.text)
             lastIsNumeric = false
             lastIsDot = false
+            oneDot = false
         }
-        // else if(btnOperator.text == "-" && !lastIsNumeric && !isOperatorAdded(tvDisplay.text.toString()))
-        else if(btnOperator.text == "-" && !lastIsNumeric) {
+        else if(btnOperator.text == "-" && !lastIsNumeric)
             tvDisplay.append("-")
-        }
-
     }
 
     fun onEqual(view: android.view.View) {
@@ -88,12 +97,14 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                val decimalFormat = DecimalFormat("0.#");
-                tvDisplay.text = decimalFormat.format(result).toString()
+                val resultFormatted: String = if(result.toLong().toDouble() == result) "" + result.toLong() else "" + result
+                val resultString = "=$resultFormatted"
+                tvDisplay.text = resultString
             } catch (e: ArithmeticException) {
                 e.printStackTrace()
             }
 
+            oneDot = false
         }
     }
 
