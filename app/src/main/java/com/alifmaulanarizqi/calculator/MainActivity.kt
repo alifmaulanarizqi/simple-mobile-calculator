@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity() {
     private var lastIsNumeric: Boolean = false
     private var lastIsDot: Boolean = false
     private var oneDot: Boolean = false
+    private var lastIsOperator = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,8 +31,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnDot.setOnClickListener {
-            if(!oneDot && lastIsNumeric && !lastIsDot) {
+            if(!oneDot && lastIsNumeric && !lastIsDot && !checkDecimalOnResult(tvDisplay.text.toString())) {
                 tvDisplay.append(".")
+                lastIsNumeric = false
+                lastIsDot = true
+                oneDot = true
+            }
+
+            if(tvDisplay.text.toString().endsWith("+")
+                        || tvDisplay.text.toString().endsWith("-") || tvDisplay.text.toString().endsWith("*")
+                        || tvDisplay.text.toString().endsWith("/"))
+                tvDisplay.append("0.")
+
+            if(tvDisplay.text.toString().startsWith("=") || tvDisplay.text.toString() == "") {
+                tvDisplay.text = "0."
                 lastIsNumeric = false
                 lastIsDot = true
                 oneDot = true
@@ -45,11 +58,18 @@ class MainActivity : AppCompatActivity() {
             tvDisplay.text = ""
             tvDisplay.append((view as Button).text)
         }
+        else if(tvDisplay.text.toString().startsWith("0."))
+            tvDisplay.append((view as Button).text)
+        else if(tvDisplay.text.toString().startsWith("0") && !lastIsOperator) {
+            tvDisplay.text = ""
+            tvDisplay.append((view as Button).text)
+        }
         else
             tvDisplay.append((view as Button).text)
 
         lastIsNumeric = true
         lastIsDot = false
+        lastIsOperator = false
     }
 
     fun onOperator(view: android.view.View) {
@@ -64,6 +84,7 @@ class MainActivity : AppCompatActivity() {
             lastIsNumeric = false
             lastIsDot = false
             oneDot = false
+            lastIsOperator = true
         }
         else if(btnOperator.text == "-" && !lastIsNumeric)
             tvDisplay.append("-")
@@ -81,8 +102,11 @@ class MainActivity : AppCompatActivity() {
                     if(s == "+" || s == "-" || s == "*" || s == "/")
                         operator = s
                     else {
-                        if(operator == null)
-                            result = s.toDouble()
+                        if(operator == null){
+                            if(s != "=") {
+                                result = s.toDouble()
+                            }
+                        }
                         else {
                             if(operator == "+")
                                 result += s.toDouble()
@@ -106,6 +130,17 @@ class MainActivity : AppCompatActivity() {
 
             oneDot = false
         }
+    }
+
+    private fun checkDecimalOnResult(value: String): Boolean {
+        if (value.startsWith("=")) {
+            for(v in value) {
+                if(v == '.')
+                    return true
+            }
+        }
+
+        return false
     }
 
 }
